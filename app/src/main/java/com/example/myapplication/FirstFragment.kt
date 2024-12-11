@@ -45,32 +45,26 @@ class FirstFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         val mainActivity= activity as MainActivity
         //RecyclerList
-
         productList=ArrayList()
-        productList=productList+GridDataClass("Subscription 1","Des 1")
-        productList=productList+GridDataClass("Subscription 2","Des 2")
-        productList=productList+GridDataClass("Subscription 3","Des 3")
-        productList=productList+GridDataClass("Subscription 4","Des 4")
-        productList=productList+GridDataClass("Subscription 5","Des 5")
-        productList=productList+GridDataClass("Subscription 6","Des 6")
-        productList=productList+GridDataClass("Subscription 7","Des 7")
-        productList=productList+GridDataClass("Subscription 8","Des 8")
+        productList=productList+GridDataClass("Subscription 1","Des 1213123")
+        productList=productList+GridDataClass("Subscription 2","Des 2213123")
+        productList=productList+GridDataClass("Subscription 3","Des 3213123")
+        productList=productList+GridDataClass("Subscription 4","Des 4213123")
+        productList=productList+GridDataClass("Subscription 5","Des 5213123")
+        productList=productList+GridDataClass("Subscription 6","Des 6213123")
+        productList=productList+GridDataClass("Subscription 7","Des 7213123")
+        productList=productList+GridDataClass("Subscription 8","Des 8213123")
         customAdapter = CustomRecyclerViewAdapter(productList)
-        MyLog.info(customAdapter.toString())
-
-        MyLog.info(customAdapter.itemCount.toString())
         val recyclerView: RecyclerView = view.findViewById(R.id.grid_view)
         recyclerView.layoutManager = LinearLayoutManager(requireContext().applicationContext)
         recyclerView.adapter=customAdapter
-
-
-        stripeViewModel.productLiveData.observe(viewLifecycleOwner){productResponse->
+        /*stripeViewModel.productLiveData.observe(viewLifecycleOwner){productResponse->
             productResponse.data.forEach {
                 productList=productList+GridDataClass(it.name,it.default_price)
                 MyLog.info("product ${it.name}")
             }
             customAdapter.setItems(productList)
-        }
+        }*/
 
         binding.buttonFirst.setOnClickListener {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
@@ -79,19 +73,25 @@ class FirstFragment : BaseFragment() {
         }
         binding.buttonPayment.setOnClickListener {
             //stripeViewModel.fetchApiSetupIntent()
-            stripeViewModel.fetchApiPaymentIntent(1000,"jpy")
+            stripeViewModel.fetchApiPaymentIntent(1000,"jpy"," ")
         }
         binding.button3.setOnClickListener {
-            StripePaymentService.listAllProducts(onError = {}, onSuccess = {})
         }
 
         stripeViewModel.customerLiveData.observe(viewLifecycleOwner){customer->
-            binding.textView2.text="Welcome "+customer.name+".Your email"+customer.email
+            binding.textView2.text="Welcome "+customer.name+".\nYour email:"+customer.email
         }
-        stripeViewModel.stripeLiveData.observe(viewLifecycleOwner){paymentSheetData->
-            if (paymentSheetData.paymentIntentClientSecret!=null){
+        stripeViewModel.paymentIntentLiveData.observe(viewLifecycleOwner){paymentIntent->
+            if (paymentIntent.clientSecret!=null){
                 mainActivity.stripePaymentManager.presentWithPaymentIntent(
-                    paymentSheetData.paymentIntentClientSecret!!
+                    paymentIntent.clientSecret.toString()
+                )
+            }
+        }
+        stripeViewModel.setupIntentLiveData.observe(viewLifecycleOwner){setupIntent->
+            if (setupIntent.setupIntentClientSecret!=null){
+                mainActivity.stripePaymentManager.presentWithSetupIntent(
+                    setupIntent.setupIntentClientSecret.toString()
                 )
             }
         }
@@ -100,7 +100,6 @@ class FirstFragment : BaseFragment() {
     override fun onResume() {
         MyLog.funcStart()
         super.onResume()
-
     }
 
     override fun onPause() {

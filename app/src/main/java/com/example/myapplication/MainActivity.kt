@@ -18,6 +18,7 @@ import com.example.myapplication.manager.StripePaymentManager
 import com.google.android.material.snackbar.Snackbar
 import com.stripe.android.paymentsheet.PaymentSheet
 import com.example.myapplication.stripeapi.StripeViewModel
+import com.stripe.android.paymentsheet.PaymentSheetResult
 
 class MainActivity : AppCompatActivity() {
     lateinit var stripePaymentManager:StripePaymentManager
@@ -28,6 +29,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+
+    private lateinit var paymentSheet: PaymentSheet
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,8 +47,9 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null)
                 .setAnchorView(R.id.fab).show()
         }
-        //Initialize stripeviewmodel,PaymentConfiguration and paymentSheet at very first
-        stripePaymentManager=StripePaymentManager(this,this)
+        //Initialize stripeviewmodel,PaymentConfiguration and paymentSheet at very first\
+        paymentSheet=PaymentSheet(this,::onPaymentSheetResult)
+        stripePaymentManager=StripePaymentManager(this,this,paymentSheet)
         stripePaymentManager.init()
 
         stripeViewModel=ViewModelProvider(this).get(StripeViewModel::class.java)
@@ -88,6 +92,26 @@ class MainActivity : AppCompatActivity() {
                 //customerConfig=PaymentSheet.CustomerConfiguration(customerId, ephemeralKey)
                 stripePaymentManager.setCustomerConfig(PaymentSheet.CustomerConfiguration(customerId,ephemeralKey))
                 //MyLog.info(">Done create customerConfig with $customerId and $ephemeralKey")
+            }
+        }
+
+
+    }
+
+    private fun onPaymentSheetResult(paymentResult: PaymentSheetResult){
+        when (paymentResult) {
+            is PaymentSheetResult.Completed -> {
+                // Payment succeeded
+                MyLog.debug("PaymentManager>>Payment completed successfully")
+                MyLog.info(stripeViewModel.paymentIntentLiveData.value?.clientSecret)
+            }
+            is PaymentSheetResult.Canceled -> {
+                // Payment was canceled
+                MyLog.debug("PaymentManager>>Payment canceled")
+            }
+            is PaymentSheetResult.Failed -> {
+                // Payment failed
+                MyLog.debug("PaymentManager>>Payment failed: ${paymentResult.error}")
             }
         }
     }
